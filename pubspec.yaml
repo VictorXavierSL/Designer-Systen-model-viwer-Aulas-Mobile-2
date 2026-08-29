@@ -1,0 +1,26 @@
+name: coffee_design_system
+description: >
+  Demonstrativo do sistema de design "JavaGem — Coffee Shop", extraído de
+  um arquivo Figma Community. Não é um app de produção — é um template
+  de referência para o padrão Component / ViewModel / Factory em Flutter.
+publish_to: 'none'
+version: 0.1.0
+
+environment:
+  sdk: '>=3.3.0 <4.0.0'
+
+dependencies:
+  flutter:
+    sdk: flutter
+  google_fonts: ^6.2.1
+  cupertino_icons: ^1.0.8
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^4.0.0
+
+flutter:
+  uses-material-design: true
+  assets:
+    - assets/images/
