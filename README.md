@@ -1,41 +1,60 @@
-# Coffee Design System — Template Demonstrativo
+# Coffee Design System — Catálogo de Componentes
 
-Template Flutter/Dart que demonstra, em código, o sistema de design do
-arquivo Figma **["JavaGem — Coffee Shop Mobile App Design" (Community)](https://www.figma.com/design/JpAfa1wvkvsNYCqNHDupoe/Coffee-Shop-Mobile-App-Design--Community-)**.
+Catálogo de sistema de design em Flutter/Dart, extraído do arquivo Figma
+**["JavaGem — Coffee Shop Mobile App Design" (Community)](https://www.figma.com/design/JpAfa1wvkvsNYCqNHDupoe/Coffee-Shop-Mobile-App-Design--Community-)**.
 
-> ⚠️ **Isto não é um app pronto.** Não há navegação de fluxo completo,
-> persistência de dados ou integração com backend. É um **demonstrativo
-> do sistema de design**: componentes reutilizáveis, tokens de design e
-> telas de exemplo que você usa como ponto de partida / referência para
-> construir o app de verdade, ajustando os parâmetros de código.
+> Este projeto é um **catálogo vivo de design system** — como um
+> Storybook para Flutter. Ele existe para documentar e exercitar cada
+> token e cada variação de componente (cor, tamanho, estado, tema claro
+> e escuro), não para ser o app final. Use-o como referência/ponto de
+> partida ao construir o produto real.
 
 ---
 
-## 1. O que foi extraído do Figma
+## 1. O que o catálogo mostra
 
-| Token | Valor | Uso |
+| Seção | Conteúdo |
+|---|---|
+| **Foundations** | Todos os tokens de cor do tema ativo + a escala tipográfica (Sora) |
+| **Button** | `primary`, `secondary` e `icon` — cada um por tamanho e estado. O botão de **adicionar item** é um Icon Button e está catalogado explicitamente |
+| **Selectable Item** | Chips de seleção (não são botões de ação): seletor de tamanho `S/M/L` e abas de categoria |
+| **Navigation** | Abas de categoria (compostas a partir do Selectable Item) e navegação inferior |
+| **Card & List Item** | Card de produto e linha de carrinho, em diferentes estados |
+| **Composição de Uso** | Os componentes acima combinados em uma tela real (Home) |
+
+Um botão no canto superior direito de **qualquer** tela alterna entre
+tema **claro** e **escuro** instantaneamente — todos os tokens e
+componentes reagem, porque nenhuma cor está fixa no código: tudo é lido
+por papel semântico (`context.colors.primary`, `context.colors.surface`
+etc.), nunca por valor hexadecimal direto.
+
+---
+
+## 2. Tokens de cor: claro e escuro
+
+| Token semântico | Light (Figma) | Dark (extensão do template) |
 |---|---|---|
-| Cor 01 — Primária | `#C67C4E` | Botões principais, preço, aba ativa |
-| Cor 02 — Secundária | `#EDD6C8` | Fundo de chip selecionado |
-| Cor 03 — Dark | `#313131` | Texto, cabeçalho escuro da Home |
-| Cor 04 — Grey | `#E3E3E3` | Bordas, ícones inativos |
-| Cor 05 — Cream | `#F9F2ED` | Fundo padrão das telas |
-| Fonte | **Sora** (Google Font, gratuita) | Toda a tipografia |
+| `primary` | `#C67C4E` | `#C67C4E` (mesma cor de marca) |
+| `onPrimary` | `#FFFFFF` | `#FFFFFF` |
+| `secondary` | `#EDD6C8` | `#4A372E` |
+| `onSecondary` | `#C67C4E` | `#EFC9A8` |
+| `background` | `#F9F2ED` | `#1B1512` |
+| `surface` | `#FFFFFF` | `#241C18` |
+| `onSurface` | `#313131` | `#F5EDE8` |
+| `textSecondary` | `#8B8B8B` | `#B4A79E` |
+| `border` | `#E3E3E3` | `#3A2F29` |
+| `heroBackground` | `#313131` | `#120D0B` |
+| `danger` / `success` | `#E05C4E` / `#3E9B5B` | `#E9897C` / `#6FC08A` |
 
-Esses valores vieram diretamente do frame **"Color Guide"** e
-**"Typography"** do arquivo (página *Assets, Style Guide & Image*), e
-estão centralizados em `lib/common/app_colors.dart` e
-`lib/common/app_typography.dart` — **a única fonte de verdade** de
-estilo do projeto. Mude os valores lá para "re-temar" o app inteiro.
-
-As variantes de botão, cards de produto e barras de navegação foram
-inferidas visualmente das telas de alta fidelidade **Home** e
-**Detail** do Figma (ex.: botão "Buy Now", seletor de tamanho S/M/L,
-chips de categoria, card de produto com badge de rating).
+O arquivo Figma original só define a paleta **clara** (frame "Color
+Guide"). Os valores de tema escuro são uma extensão deste template,
+derivados a partir da paleta clara respeitando contraste. Tudo isso
+vive em `lib/common/app_colors.dart` (paleta bruta) e
+`lib/common/app_color_tokens.dart` (mapeamento semântico por tema).
 
 ---
 
-## 2. Padrão de projeto: Component / ViewModel / Factory
+## 3. Padrão de projeto: Component / ViewModel / Factory
 
 Cada componente reutilizável em `lib/components/<nome>/` segue sempre a
 mesma estrutura de 3 arquivos — um mini-MVVM combinado com o padrão
@@ -48,113 +67,114 @@ components/<nome>/
 └── <nome>_factory.dart      # O Criador de Variantes — métodos estáticos
 ```
 
-- **`*_viewmodel.dart`**: uma classe `@immutable` com `copyWith`, que
-  descreve completamente UMA instância do componente (variante,
-  tamanho, texto, ícone, callbacks, estados como `isSelected` /
-  `isEnabled` / `isLoading`). Não tem lógica de UI nem regra de negócio.
-- **`*_component.dart`**: um `StatelessWidget` que recebe o ViewModel e
-  só sabe desenhá-lo. Não decide quais variantes existem — apenas
-  pinta o que recebe. Isso o torna 100% testável e reutilizável.
-- **`*_factory.dart`**: métodos estáticos (`ActionButtonFactory.primary(...)`,
-  `.outlineChip(...)`, etc.) que sabem montar as combinações válidas de
-  ViewModel — é aqui que fica o "conhecimento" de design system (quais
-  variantes existem, quais os tamanhos padrão etc.). Cada factory
-  também expõe um `showcaseCatalog()` usado pelas telas-espelho.
+- **`*_viewmodel.dart`**: classe `@immutable` com `copyWith`, descreve
+  completamente UMA instância do componente. Sem lógica de UI, sem
+  regra de negócio.
+- **`*_component.dart`**: `StatelessWidget` que só desenha o ViewModel
+  recebido, lendo cor por papel semântico via `context.colors` (nunca
+  `Color(0xFF...)` direto) — é isso que faz o tema escuro funcionar em
+  todo o sistema automaticamente.
+- **`*_factory.dart`**: métodos estáticos que sabem montar as
+  combinações válidas de ViewModel, e um `showcaseCatalog()` — usado
+  pelas telas de catálogo para renderizar TODAS as variações
+  automaticamente.
 
-Esse padrão é comum em codebases Flutter de médio/grande porte porque
-separa claramente **UI pura** (fácil de testar/prever) de **regras de
-variantes** (fácil de estender sem tocar na UI) — parecido com o
-espírito de Storybook/Design Tokens no mundo web.
+### Por que `Button` e `Selectable Item` são componentes separados
+
+Um botão **dispara uma ação** (Buy Now, adicionar item, voltar). Um
+item selecionável **representa um estado dentro de um grupo** (qual
+tamanho está escolhido, qual categoria está ativa). São conceitos
+semanticamente diferentes — por isso vivem em componentes e catálogos
+próprios (`action_button/` e `selectable_chip/`), mesmo compartilhando
+influências visuais (ambos usam formato de pílula).
 
 ### Como adicionar um novo componente
 
 1. Crie `lib/components/meu_componente/` com os 3 arquivos no mesmo
    padrão (copie um existente como esqueleto).
-2. Implemente `showcaseCatalog()` na factory retornando
+2. Leia cor sempre via `context.colors.<papel>` — nunca hardcode.
+3. Implemente `showcaseCatalog()` na factory retornando
    `List<ShowcaseSection<MeuComponenteViewModel>>`.
-3. Crie `lib/screens/sample_meu_componente_screen.dart` usando
-   `ShowcaseScaffold` (veja `lib/common/showcase_scaffold.dart`) —
-   normalmente são só ~15 linhas.
-4. Adicione uma entrada no menu em `lib/main.dart`.
+4. Crie `lib/screens/<nome>_screen.dart` usando `ComponentCatalogScaffold`
+   (veja `lib/common/showcase_scaffold.dart`) — normalmente ~15 linhas.
+5. Adicione uma entrada em `DesignSystemHomeScreen` (`lib/main.dart`).
 
 ---
 
-## 3. Estrutura de pastas
+## 4. Estrutura de pastas
 
 ```
 lib/
-├── common/                  # Tokens e utilitários compartilhados
-│   ├── app_colors.dart          # Paleta extraída do Figma
-│   ├── app_typography.dart      # Escala tipográfica (Sora)
+├── common/
+│   ├── app_colors.dart          # Paleta bruta (Figma light + extensão dark)
+│   ├── app_color_tokens.dart    # Tokens semânticos por tema (ThemeExtension)
+│   ├── app_theme.dart           # Monta ThemeData light/dark + context.colors
+│   ├── theme_controller.dart    # Estado global do tema (claro/escuro)
+│   ├── theme_toggle_button.dart # Botão de alternância reutilizável
+│   ├── app_typography.dart      # Escala tipográfica (Sora), sem cor fixa
 │   ├── app_assets.dart          # Caminhos de imagens
 │   ├── showcase_models.dart     # Modelo genérico de "seção de exemplos"
-│   └── showcase_scaffold.dart   # Layout genérico das telas-espelho
+│   └── showcase_scaffold.dart   # Layout genérico das telas de catálogo
 ├── components/
-│   ├── action_button/       # Botões: primary, secondary, outline, ghost, icon
-│   ├── tab_bar/              # Category chips e bottom navigation
-│   └── list_items/           # Card de produto e linha de carrinho
+│   ├── action_button/       # Botão de ação: primary, secondary, icon (inclui "add item")
+│   ├── selectable_chip/     # Item selecionável: seletor de tamanho, aba de categoria
+│   ├── tab_bar/             # Navegação: categorias (compostas de selectable_chip) + bottom nav
+│   └── list_items/          # Card de produto e linha de carrinho
 ├── screens/
-│   ├── sample_action_button_screen.dart  # Espelho: todas as variantes de botão
-│   ├── sample_tab_bar_screen.dart        # Espelho: todas as variantes de tab bar
-│   ├── sample_list_items_screen.dart     # Espelho: todas as variantes de card
-│   └── sample_screen.dart                # Tela principal montada (Home real)
-└── main.dart                 # Índice de navegação entre as telas de demo
+│   ├── foundations_screen.dart           # Catálogo: cores + tipografia
+│   ├── sample_action_button_screen.dart  # Catálogo: Button
+│   ├── selectable_items_screen.dart      # Catálogo: Selectable Item
+│   ├── sample_tab_bar_screen.dart        # Catálogo: Navigation
+│   ├── sample_list_items_screen.dart     # Catálogo: Card & List Item
+│   └── sample_screen.dart                # Composição de uso (Home real)
+└── main.dart                  # Landing page do catálogo + tema global
 ```
-
-Cada tela "de verdade" (`sample_screen.dart`) tem uma tela-espelho
-correspondente (`sample_<componente>_screen.dart`) que existe **só**
-para expor visualmente as variáveis/variantes daquele componente —
-exatamente como pedido: *"para cada tela deve ter uma tela/espelhada
-que contemple as diferentes variáveis dos botões"*.
 
 ---
 
-## 4. Como rodar
+## 5. Como rodar
 
 ```bash
 flutter pub get
 flutter run
 ```
 
-O app abre num **índice** com 4 opções: a tela principal montada e as
-3 telas-espelho de componentes.
+O app abre na landing do catálogo, organizada em **Foundations**,
+**Components** e **Preview**. O ícone de sol/lua na barra superior de
+qualquer tela alterna entre os temas claro e escuro.
 
 ### Assets de imagem
 
-Este template não inclui os PNGs originais do Figma (o link de
-exportação do MCP expira em 7 dias). `lib/common/app_assets.dart`
-aponta para `assets/images/<nome>.png` — exporte as imagens reais do
-Figma (nó **Home → Product → Image**) para essa pasta com esses nomes,
-ou simplesmente deixe como está: todo componente de imagem tem
-`errorBuilder` com fallback visual (ícone de café sobre fundo creme),
-então o template roda "out of the box" mesmo sem os assets.
+`lib/common/app_assets.dart` aponta para `assets/images/<nome>.png`.
+Exporte as imagens reais do Figma (nó **Home → Product → Image**) para
+essa pasta, ou deixe como está: todo componente de imagem tem
+`errorBuilder` com fallback visual, então o catálogo roda "out of the
+box" mesmo sem os assets.
 
 ### Fonte
 
-A tipografia usa o pacote [`google_fonts`](https://pub.dev/packages/google_fonts)
-para carregar **Sora** dinamicamente (não precisa baixar `.ttf` manualmente).
-Se preferir embutir a fonte localmente (sem depender de rede em tempo
-de execução), baixe os arquivos em [fonts.google.com/specimen/Sora](https://fonts.google.com/specimen/Sora),
-coloque em `assets/fonts/` e declare em `pubspec.yaml` na seção `fonts:`,
-trocando `GoogleFonts.sora(...)` por `TextStyle(fontFamily: 'Sora', ...)`
-em `app_typography.dart`.
+A tipografia usa [`google_fonts`](https://pub.dev/packages/google_fonts)
+para carregar **Sora** dinamicamente. Para embutir a fonte localmente
+(sem depender de rede em tempo de execução), baixe os arquivos em
+[fonts.google.com/specimen/Sora](https://fonts.google.com/specimen/Sora),
+declare em `pubspec.yaml` e troque `GoogleFonts.sora(...)` por
+`TextStyle(fontFamily: 'Sora', ...)` em `app_typography.dart`.
 
 ---
 
-## 5. Customizando o template
+## 6. Customizando o template
 
-- **Trocar a paleta**: edite os 5 valores em `app_colors.dart`. Todo o
-  app se atualiza sozinho (nenhuma cor está "hardcoded" nos componentes).
-- **Adicionar uma variante de botão**: adicione um método na
-  `ActionButtonFactory` e um item no `showcaseCatalog()` — a tela de
-  showcase reflete automaticamente.
+- **Trocar a paleta**: edite `app_colors.dart` (valores brutos) e/ou
+  `app_color_tokens.dart` (mapeamento semântico). Todo o app — em
+  ambos os temas — se atualiza sozinho.
+- **Adicionar uma variação de botão**: adicione um método/entrada na
+  `ActionButtonFactory` e no `showcaseCatalog()`.
 - **Trocar o cardápio de exemplo**: edite `ListItemFactory.demoMenu()`.
-- **Ajustar layout da Home**: `lib/screens/sample_screen.dart` — é
-  código simples de composição, sem lógica escondida.
+- **Ajustar a Home composta**: `lib/screens/sample_screen.dart`.
 
 ---
 
-## 6. Créditos
+## 7. Créditos
 
 Design original: **JavaGem — Coffee Shop Mobile App Design**, arquivo
 Community do Figma. Este template reimplementa os tokens visuais em

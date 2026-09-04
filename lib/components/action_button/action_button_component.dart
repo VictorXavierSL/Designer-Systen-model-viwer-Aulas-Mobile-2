@@ -1,24 +1,23 @@
 import 'package:flutter/material.dart';
 
-import '../../common/app_colors.dart';
+import '../../common/app_theme.dart';
 import '../../common/app_typography.dart';
 import 'action_button_viewmodel.dart';
 
 export 'action_button_viewmodel.dart';
 
-/// A UI Visual do botão.
+/// A UI Visual do botão de ação.
 ///
-/// Este widget NÃO decide regras de negócio nem cria variantes — ele só
-/// sabe pintar exatamente o que o [ActionButtonViewModel] descreve.
-/// Isso mantém o componente 100% reutilizável e fácil de testar / usar
-/// em qualquer tela (inclusive nas telas-espelho de showcase).
+/// Não decide regras de negócio nem cria variantes — só pinta o que o
+/// [ActionButtonViewModel] descreve, lendo cor por papel semântico via
+/// `context.colors` (funciona automaticamente em claro e escuro).
 class ActionButtonComponent extends StatelessWidget {
   final ActionButtonViewModel viewModel;
 
   const ActionButtonComponent({super.key, required this.viewModel});
 
-  double get _height {
-    switch (viewModel.size) {
+  double _heightFor(ActionButtonSize size) {
+    switch (size) {
       case ActionButtonSize.small:
         return 32;
       case ActionButtonSize.medium:
@@ -28,8 +27,8 @@ class ActionButtonComponent extends StatelessWidget {
     }
   }
 
-  double get _iconSize {
-    switch (viewModel.size) {
+  double _iconSizeFor(ActionButtonSize size) {
+    switch (size) {
       case ActionButtonSize.small:
         return 16;
       case ActionButtonSize.medium:
@@ -39,8 +38,8 @@ class ActionButtonComponent extends StatelessWidget {
     }
   }
 
-  EdgeInsets get _padding {
-    switch (viewModel.size) {
+  EdgeInsets _paddingFor(ActionButtonSize size) {
+    switch (size) {
       case ActionButtonSize.small:
         return const EdgeInsets.symmetric(horizontal: 14);
       case ActionButtonSize.medium:
@@ -50,44 +49,30 @@ class ActionButtonComponent extends StatelessWidget {
     }
   }
 
-  ({Color background, Color foreground, Color? border}) _paletteFor(
-    BuildContext context,
-  ) {
-    final bool disabled = !viewModel.isEnabled;
+  ({Color background, Color foreground}) _paletteFor(BuildContext context) {
+    final tokens = context.colors;
+    final disabled = !viewModel.isEnabled;
 
     switch (viewModel.variant) {
       case ActionButtonVariant.primary:
         return (
-          background: disabled ? AppColors.grey : AppColors.primary,
-          foreground: disabled ? AppColors.textSecondary : AppColors.white,
-          border: null,
+          background: disabled ? tokens.border : tokens.primary,
+          foreground: disabled ? tokens.textSecondary : tokens.onPrimary,
         );
       case ActionButtonVariant.secondary:
         return (
-          background: disabled ? AppColors.grey : AppColors.dark,
-          foreground: AppColors.white,
-          border: null,
-        );
-      case ActionButtonVariant.outline:
-        final bool selected = viewModel.isSelected;
-        return (
-          background: selected ? AppColors.secondary : AppColors.white,
-          foreground: selected ? AppColors.primary : AppColors.dark,
-          border: selected ? AppColors.primary : AppColors.grey,
-        );
-      case ActionButtonVariant.ghost:
-        final bool selected = viewModel.isSelected;
-        return (
-          background: selected ? AppColors.primary : Colors.transparent,
-          foreground: selected ? AppColors.white : AppColors.textSecondary,
-          border: null,
+          background: disabled ? tokens.border : tokens.onSurface,
+          foreground: disabled ? tokens.textSecondary : tokens.surface,
         );
       case ActionButtonVariant.icon:
-        final bool selected = viewModel.isSelected;
+        final filled = viewModel.emphasis == ActionButtonEmphasis.filled;
         return (
-          background: selected ? AppColors.primary : AppColors.cream,
-          foreground: selected ? AppColors.white : AppColors.dark,
-          border: null,
+          background: disabled
+              ? tokens.border
+              : (filled ? tokens.primary : tokens.secondary),
+          foreground: disabled
+              ? tokens.textSecondary
+              : (filled ? tokens.onPrimary : tokens.onSecondary),
         );
     }
   }
@@ -95,13 +80,14 @@ class ActionButtonComponent extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final palette = _paletteFor(context);
-    final bool disabled = !viewModel.isEnabled || viewModel.isLoading;
+    final disabled = !viewModel.isEnabled || viewModel.isLoading;
+    final height = _heightFor(viewModel.size);
+    final iconSize = _iconSizeFor(viewModel.size);
 
     if (viewModel.variant == ActionButtonVariant.icon) {
-      final double side = _height;
       return SizedBox(
-        width: side,
-        height: side,
+        width: height,
+        height: height,
         child: Material(
           color: palette.background,
           shape: const CircleBorder(),
@@ -111,14 +97,11 @@ class ActionButtonComponent extends StatelessWidget {
             child: Center(
               child: viewModel.isLoading
                   ? SizedBox(
-                      width: _iconSize,
-                      height: _iconSize,
-                      child: CircularProgressIndicator(
-                        strokeWidth: 2,
-                        color: palette.foreground,
-                      ),
+                      width: iconSize,
+                      height: iconSize,
+                      child: CircularProgressIndicator(strokeWidth: 2, color: palette.foreground),
                     )
-                  : Icon(viewModel.icon, size: _iconSize, color: palette.foreground),
+                  : Icon(viewModel.icon, size: iconSize, color: palette.foreground),
             ),
           ),
         ),
@@ -127,18 +110,15 @@ class ActionButtonComponent extends StatelessWidget {
 
     final content = viewModel.isLoading
         ? SizedBox(
-            width: _iconSize,
-            height: _iconSize,
-            child: CircularProgressIndicator(
-              strokeWidth: 2,
-              color: palette.foreground,
-            ),
+            width: iconSize,
+            height: iconSize,
+            child: CircularProgressIndicator(strokeWidth: 2, color: palette.foreground),
           )
         : Row(
             mainAxisSize: MainAxisSize.min,
             children: [
               if (viewModel.icon != null) ...[
-                Icon(viewModel.icon, size: _iconSize, color: palette.foreground),
+                Icon(viewModel.icon, size: iconSize, color: palette.foreground),
                 if (viewModel.label != null) const SizedBox(width: 8),
               ],
               if (viewModel.label != null)
@@ -154,22 +134,16 @@ class ActionButtonComponent extends StatelessWidget {
 
     return SizedBox(
       width: viewModel.expand ? double.infinity : null,
-      height: _height,
+      height: height,
       child: Material(
         color: palette.background,
-        borderRadius: BorderRadius.circular(_height / 2),
+        borderRadius: BorderRadius.circular(height / 2),
         child: InkWell(
-          borderRadius: BorderRadius.circular(_height / 2),
+          borderRadius: BorderRadius.circular(height / 2),
           onTap: disabled ? null : viewModel.onPressed,
           child: Container(
-            padding: _padding,
+            padding: _paddingFor(viewModel.size),
             alignment: Alignment.center,
-            decoration: BoxDecoration(
-              borderRadius: BorderRadius.circular(_height / 2),
-              border: palette.border != null
-                  ? Border.all(color: palette.border!, width: 1.2)
-                  : null,
-            ),
             child: content,
           ),
         ),

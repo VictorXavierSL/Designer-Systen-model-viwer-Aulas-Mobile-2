@@ -1,14 +1,15 @@
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
 
-import 'common/app_colors.dart';
+import 'common/app_theme.dart';
+import 'common/theme_controller.dart';
+import 'common/theme_toggle_button.dart';
 import 'common/app_typography.dart';
-import 'components/action_button/action_button_component.dart';
-import 'components/action_button/action_button_factory.dart';
+import 'screens/foundations_screen.dart';
 import 'screens/sample_action_button_screen.dart';
 import 'screens/sample_list_items_screen.dart';
 import 'screens/sample_screen.dart';
 import 'screens/sample_tab_bar_screen.dart';
+import 'screens/selectable_items_screen.dart';
 
 void main() {
   runApp(const CoffeeDesignSystemApp());
@@ -16,127 +17,216 @@ void main() {
 
 /// Ponto de entrada do TEMPLATE.
 ///
-/// Importante: este app não é o "Coffee Shop" em si — é um demonstrativo
-/// do sistema de design extraído do Figma. A tela inicial é um índice
-/// que leva às telas-espelho de cada componente e à tela principal
-/// montada. Veja o README.md para como usar isto como ponto de partida
-/// de um app real.
-class CoffeeDesignSystemApp extends StatelessWidget {
+/// Este app é o **catálogo do sistema de design** "JavaGem — Coffee
+/// Shop", extraído de um arquivo Figma. Não é o produto final: é a
+/// referência viva de tokens e componentes que você usa como ponto de
+/// partida para construir o app real. Veja o README.md.
+class CoffeeDesignSystemApp extends StatefulWidget {
   const CoffeeDesignSystemApp({super.key});
 
   @override
+  State<CoffeeDesignSystemApp> createState() => _CoffeeDesignSystemAppState();
+}
+
+class _CoffeeDesignSystemAppState extends State<CoffeeDesignSystemApp> {
+  final ThemeController _themeController = ThemeController();
+
+  @override
+  void dispose() {
+    _themeController.dispose();
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
-    return MaterialApp(
-      title: 'Coffee Design System — Demo',
-      debugShowCheckedModeBanner: false,
-      theme: ThemeData(
-        useMaterial3: true,
-        scaffoldBackgroundColor: AppColors.cream,
-        colorScheme: ColorScheme.fromSeed(
-          seedColor: AppColors.primary,
-          primary: AppColors.primary,
-          surface: AppColors.cream,
-        ),
-        textTheme: GoogleFonts.soraTextTheme(),
+    return ThemeControllerScope(
+      controller: _themeController,
+      child: AnimatedBuilder(
+        animation: _themeController,
+        builder: (context, _) {
+          return MaterialApp(
+            title: 'Coffee Design System',
+            debugShowCheckedModeBanner: false,
+            theme: AppTheme.light(),
+            darkTheme: AppTheme.dark(),
+            themeMode: _themeController.value,
+            home: const DesignSystemHomeScreen(),
+          );
+        },
       ),
-      home: const _DesignSystemIndexScreen(),
     );
   }
 }
 
-class _DesignSystemIndexScreen extends StatelessWidget {
-  const _DesignSystemIndexScreen();
+class _CatalogEntry {
+  final String title;
+  final String subtitle;
+  final IconData icon;
+  final WidgetBuilder builder;
+
+  const _CatalogEntry({
+    required this.title,
+    required this.subtitle,
+    required this.icon,
+    required this.builder,
+  });
+}
+
+class DesignSystemHomeScreen extends StatelessWidget {
+  const DesignSystemHomeScreen({super.key});
+
+  static const _foundations = [
+    _CatalogEntry(
+      title: 'Foundations',
+      subtitle: 'Cores (claro/escuro) e escala tipográfica.',
+      icon: Icons.palette_outlined,
+      builder: _buildFoundations,
+    ),
+  ];
+
+  static const _components = [
+    _CatalogEntry(
+      title: 'Button',
+      subtitle: 'Primary, secondary e icon — por cor, tamanho e estado.',
+      icon: Icons.smart_button_outlined,
+      builder: _buildButtonCatalog,
+    ),
+    _CatalogEntry(
+      title: 'Selectable Item',
+      subtitle: 'Chips de seleção: seletor de tamanho e abas de categoria.',
+      icon: Icons.check_circle_outline,
+      builder: _buildSelectableCatalog,
+    ),
+    _CatalogEntry(
+      title: 'Navigation',
+      subtitle: 'Abas de categoria e navegação inferior.',
+      icon: Icons.view_carousel_outlined,
+      builder: _buildNavigationCatalog,
+    ),
+    _CatalogEntry(
+      title: 'Card & List Item',
+      subtitle: 'Card de produto e linha de carrinho.',
+      icon: Icons.grid_view_outlined,
+      builder: _buildCardCatalog,
+    ),
+  ];
+
+  static const _preview = [
+    _CatalogEntry(
+      title: 'Composição de Uso',
+      subtitle: 'Os componentes acima combinados em uma tela real.',
+      icon: Icons.smartphone_outlined,
+      builder: _buildComposition,
+    ),
+  ];
+
+  static Widget _buildFoundations(BuildContext _) => const FoundationsScreen();
+  static Widget _buildButtonCatalog(BuildContext _) => const SampleActionButtonScreen();
+  static Widget _buildSelectableCatalog(BuildContext _) => const SelectableItemsScreen();
+  static Widget _buildNavigationCatalog(BuildContext _) => const SampleTabBarScreen();
+  static Widget _buildCardCatalog(BuildContext _) => const SampleListItemsScreen();
+  static Widget _buildComposition(BuildContext _) => const SampleScreen();
 
   @override
   Widget build(BuildContext context) {
+    final tokens = context.colors;
     return Scaffold(
-      backgroundColor: AppColors.cream,
       appBar: AppBar(
-        backgroundColor: AppColors.cream,
-        elevation: 0,
-        foregroundColor: AppColors.dark,
-        title: Text('Coffee Design System', style: AppTypography.headingMedium),
+        title: Text('Coffee Design System', style: AppTypography.headingMedium.copyWith(color: tokens.onSurface)),
+        actions: const [ThemeToggleButton()],
       ),
       body: ListView(
         padding: const EdgeInsets.all(20),
         children: [
           Text(
-            'Demonstrativo do sistema de design "JavaGem — Coffee Shop", '
-            'extraído do Figma Community. Cada item abaixo abre uma '
-            'tela-espelho de um componente, ou a tela principal montada.',
-            style: AppTypography.bodyMedium,
+            'Sistema de design "JavaGem — Coffee Shop", extraído de um arquivo Figma '
+            'e implementado em Dart/Flutter com o padrão Component / ViewModel / Factory.',
+            style: AppTypography.bodyMedium.copyWith(color: tokens.textSecondary),
           ),
-          const SizedBox(height: 24),
-          _IndexEntry(
-            title: 'Tela principal montada',
-            subtitle: 'Home real, composta pelos componentes reutilizáveis.',
-            onPressed: () => _push(context, const SampleScreen()),
-          ),
+          const SizedBox(height: 28),
+          _SectionLabel('FOUNDATIONS'),
           const SizedBox(height: 12),
-          _IndexEntry(
-            title: 'Action Button — variantes',
-            subtitle: 'Primary, secondary, outline, ghost e icon.',
-            onPressed: () => _push(context, const SampleActionButtonScreen()),
-          ),
+          for (final entry in _foundations) ...[
+            _CatalogCard(entry: entry),
+            const SizedBox(height: 12),
+          ],
+          const SizedBox(height: 16),
+          _SectionLabel('COMPONENTS'),
           const SizedBox(height: 12),
-          _IndexEntry(
-            title: 'Tab Bar — variantes',
-            subtitle: 'Category chips e bottom navigation.',
-            onPressed: () => _push(context, const SampleTabBarScreen()),
-          ),
+          for (final entry in _components) ...[
+            _CatalogCard(entry: entry),
+            const SizedBox(height: 12),
+          ],
+          const SizedBox(height: 16),
+          _SectionLabel('PREVIEW'),
           const SizedBox(height: 12),
-          _IndexEntry(
-            title: 'List Items — variantes',
-            subtitle: 'Product card e cart line.',
-            onPressed: () => _push(context, const SampleListItemsScreen()),
-          ),
+          for (final entry in _preview) ...[
+            _CatalogCard(entry: entry),
+            const SizedBox(height: 12),
+          ],
         ],
       ),
     );
   }
-
-  void _push(BuildContext context, Widget screen) {
-    Navigator.of(context).push(MaterialPageRoute(builder: (_) => screen));
-  }
 }
 
-class _IndexEntry extends StatelessWidget {
-  final String title;
-  final String subtitle;
-  final VoidCallback onPressed;
+class _SectionLabel extends StatelessWidget {
+  final String label;
 
-  const _IndexEntry({required this.title, required this.subtitle, required this.onPressed});
+  const _SectionLabel(this.label);
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: AppColors.white,
+    final tokens = context.colors;
+    return Text(label, style: AppTypography.overline.copyWith(color: tokens.primary));
+  }
+}
+
+class _CatalogCard extends StatelessWidget {
+  final _CatalogEntry entry;
+
+  const _CatalogCard({required this.entry});
+
+  @override
+  Widget build(BuildContext context) {
+    final tokens = context.colors;
+    return Material(
+      color: tokens.surface,
+      borderRadius: BorderRadius.circular(18),
+      child: InkWell(
         borderRadius: BorderRadius.circular(18),
-        border: Border.all(color: AppColors.grey),
-      ),
-      child: Row(
-        children: [
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(title, style: AppTypography.titleSmall),
-                const SizedBox(height: 4),
-                Text(subtitle, style: AppTypography.bodySmall),
-              ],
-            ),
+        onTap: () => Navigator.of(context).push(MaterialPageRoute(builder: entry.builder)),
+        child: Container(
+          padding: const EdgeInsets.all(16),
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(18),
+            border: Border.all(color: tokens.border),
           ),
-          const SizedBox(width: 12),
-          ActionButtonComponent(
-            viewModel: ActionButtonFactory.icon(
-              icon: Icons.arrow_forward_rounded,
-              isSelected: true,
-              onPressed: onPressed,
-            ),
+          child: Row(
+            children: [
+              Container(
+                width: 44,
+                height: 44,
+                decoration: BoxDecoration(color: tokens.secondary, borderRadius: BorderRadius.circular(12)),
+                alignment: Alignment.center,
+                child: Icon(entry.icon, color: tokens.onSecondary),
+              ),
+              const SizedBox(width: 14),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(entry.title,
+                        style: AppTypography.titleSmall.copyWith(color: tokens.onSurface)),
+                    const SizedBox(height: 2),
+                    Text(entry.subtitle, style: AppTypography.bodySmall.copyWith(color: tokens.textSecondary)),
+                  ],
+                ),
+              ),
+              Icon(Icons.arrow_forward_ios_rounded, size: 16, color: tokens.textSecondary),
+            ],
           ),
-        ],
+        ),
       ),
     );
   }

@@ -1,33 +1,36 @@
 import 'package:flutter/material.dart';
 
-/// Variantes visuais do botão, mapeadas 1:1 com o que existe nas telas de
-/// alta fidelidade do Figma:
+/// Variantes de **botão de ação** (dispara uma ação, não representa
+/// seleção — para chips seletores, ver `components/selectable_chip`):
 ///
-/// - [primary]   → botão sólido laranja ("Buy Now", "Get Started")
-/// - [secondary] → botão sólido escuro (ações secundárias de destaque)
-/// - [outline]   → contorno, preenche quando selecionado (chip "Size: M")
-/// - [ghost]     → texto puro, sem fundo (chip de categoria inativo)
-/// - [icon]      → botão circular/quadrado só com ícone (voltar, favoritar,
-///                 adicionar item, stepper de quantidade)
-enum ActionButtonVariant { primary, secondary, outline, ghost, icon }
+/// - [primary]   → botão sólido de cor de marca ("Buy Now", "Get Started")
+/// - [secondary] → botão sólido de superfície escura (ação secundária)
+/// - [icon]      → botão circular só com ícone (voltar, favoritar,
+///                 filtrar, **adicionar item**, stepper de quantidade).
+///                 Repare: o botão de "adicionar item" é um Icon Button
+///                 com `emphasis: filled`, catalogado junto dos demais.
+enum ActionButtonVariant { primary, secondary, icon }
 
-/// Tamanhos disponíveis. Os valores de altura/padding reais vivem no
-/// [ActionButtonComponent] — o ViewModel só declara a intenção.
+/// Ênfase visual do botão — controla a intensidade da cor de fundo.
+/// Principalmente relevante para [ActionButtonVariant.icon]:
+/// [neutral] = fundo neutro discreto (voltar, favoritar inativo);
+/// [filled]  = fundo de cor de marca (adicionar item, filtro ativo).
+enum ActionButtonEmphasis { neutral, filled }
+
 enum ActionButtonSize { small, medium, large }
 
 /// Estado + dados completos de UMA instância de botão.
 ///
-/// É um objeto imutável de propósito único: o [ActionButtonComponent]
-/// apenas o "renderiza", e o [ActionButtonFactory] é quem sabe montar
-/// as combinações válidas (regras de negócio/design ficam na factory,
-/// não no componente visual).
+/// Objeto imutável de propósito único: o [ActionButtonComponent] apenas
+/// o renderiza; o [ActionButtonFactory] sabe montar as combinações
+/// válidas de cor × tamanho × estado.
 @immutable
 class ActionButtonViewModel {
   final String? label;
   final IconData? icon;
   final ActionButtonVariant variant;
+  final ActionButtonEmphasis emphasis;
   final ActionButtonSize size;
-  final bool isSelected;
   final bool isEnabled;
   final bool isLoading;
   final bool expand;
@@ -37,8 +40,8 @@ class ActionButtonViewModel {
     this.label,
     this.icon,
     this.variant = ActionButtonVariant.primary,
+    this.emphasis = ActionButtonEmphasis.filled,
     this.size = ActionButtonSize.medium,
-    this.isSelected = false,
     this.isEnabled = true,
     this.isLoading = false,
     this.expand = false,
@@ -52,8 +55,8 @@ class ActionButtonViewModel {
     String? label,
     IconData? icon,
     ActionButtonVariant? variant,
+    ActionButtonEmphasis? emphasis,
     ActionButtonSize? size,
-    bool? isSelected,
     bool? isEnabled,
     bool? isLoading,
     bool? expand,
@@ -63,8 +66,8 @@ class ActionButtonViewModel {
       label: label ?? this.label,
       icon: icon ?? this.icon,
       variant: variant ?? this.variant,
+      emphasis: emphasis ?? this.emphasis,
       size: size ?? this.size,
-      isSelected: isSelected ?? this.isSelected,
       isEnabled: isEnabled ?? this.isEnabled,
       isLoading: isLoading ?? this.isLoading,
       expand: expand ?? this.expand,

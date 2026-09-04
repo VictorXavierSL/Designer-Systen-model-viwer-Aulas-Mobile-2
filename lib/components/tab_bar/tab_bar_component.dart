@@ -1,19 +1,18 @@
 import 'package:flutter/material.dart';
 
-import '../../common/app_colors.dart';
+import '../../common/app_theme.dart';
 import '../../common/app_typography.dart';
-import '../action_button/action_button_component.dart';
-import '../action_button/action_button_factory.dart';
+import '../selectable_chip/selectable_chip_component.dart';
+import '../selectable_chip/selectable_chip_factory.dart';
 import 'tab_bar_viewmodel.dart';
 
 export 'tab_bar_viewmodel.dart';
 
-/// A UI Visual da barra de navegação/categorias.
+/// A UI Visual da navegação (abas de categoria / navegação inferior).
 ///
-/// Assim como o [ActionButtonComponent], este widget só sabe desenhar o
-/// que o [TabBarViewModel] descreve. Para a variante [TabBarVariant.categoryChips]
-/// ele reaproveita o próprio `ActionButtonComponent` (chip = botão ghost),
-/// evitando duplicar estilo de "pill" em dois lugares.
+/// Para [TabBarVariant.categoryChips], compõe o `SelectableChipComponent`
+/// (o item ali é uma SELEÇÃO, não uma ação) — evitando duplicar estilo
+/// de chip em dois componentes diferentes.
 class TabBarComponent extends StatelessWidget {
   final TabBarViewModel viewModel;
 
@@ -25,7 +24,7 @@ class TabBarComponent extends StatelessWidget {
       case TabBarVariant.categoryChips:
         return _buildCategoryChips();
       case TabBarVariant.bottomNavigation:
-        return _buildBottomNavigation();
+        return _buildBottomNavigation(context);
     }
   }
 
@@ -39,11 +38,11 @@ class TabBarComponent extends StatelessWidget {
         itemBuilder: (context, index) {
           final item = viewModel.items[index];
           final bool isActive = index == viewModel.activeIndex;
-          return ActionButtonComponent(
-            viewModel: ActionButtonFactory.categoryChip(
+          return SelectableChipComponent(
+            viewModel: SelectableChipFactory.categoryTab(
               label: item.label,
               isSelected: isActive,
-              onPressed: () => viewModel.onItemSelected?.call(index),
+              onSelected: () => viewModel.onItemSelected?.call(index),
             ),
           );
         },
@@ -51,12 +50,13 @@ class TabBarComponent extends StatelessWidget {
     );
   }
 
-  Widget _buildBottomNavigation() {
+  Widget _buildBottomNavigation(BuildContext context) {
+    final tokens = context.colors;
     return DecoratedBox(
-      decoration: const BoxDecoration(
-        color: AppColors.white,
+      decoration: BoxDecoration(
+        color: tokens.surface,
         boxShadow: [
-          BoxShadow(color: Color(0x14000000), blurRadius: 16, offset: Offset(0, -4)),
+          BoxShadow(color: tokens.onSurface.withOpacity(0.08), blurRadius: 16, offset: const Offset(0, -4)),
         ],
       ),
       child: SafeArea(
@@ -89,7 +89,8 @@ class _NavItem extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final color = isActive ? AppColors.primary : AppColors.grey;
+    final tokens = context.colors;
+    final color = isActive ? tokens.primary : tokens.border;
     return InkWell(
       onTap: onTap,
       customBorder: const CircleBorder(),
@@ -101,12 +102,13 @@ class _NavItem extends StatelessWidget {
             Icon(item.icon, color: color, size: 24),
             const SizedBox(height: 4),
             if (isActive)
-              Container(width: 10, height: 5, decoration: BoxDecoration(
-                color: AppColors.primary,
-                borderRadius: BorderRadius.circular(4),
-              ))
+              Container(
+                width: 10,
+                height: 5,
+                decoration: BoxDecoration(color: tokens.primary, borderRadius: BorderRadius.circular(4)),
+              )
             else
-              Text(item.label, style: AppTypography.navLabel),
+              Text(item.label, style: AppTypography.navLabel.copyWith(color: tokens.textSecondary)),
           ],
         ),
       ),
