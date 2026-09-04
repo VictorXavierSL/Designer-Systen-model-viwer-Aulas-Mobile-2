@@ -132,25 +132,6 @@ lib/
 
 ---
 
-## 5. Como rodar
-
-```bash
-flutter pub get
-flutter run
-```
-
-O app abre na landing do catálogo, organizada em **Foundations**,
-**Components** e **Preview**. O ícone de sol/lua na barra superior de
-qualquer tela alterna entre os temas claro e escuro.
-
-### Assets de imagem
-
-`lib/common/app_assets.dart` aponta para `assets/images/<nome>.png`.
-Exporte as imagens reais do Figma (nó **Home → Product → Image**) para
-essa pasta, ou deixe como está: todo componente de imagem tem
-`errorBuilder` com fallback visual, então o catálogo roda "out of the
-box" mesmo sem os assets.
-
 ### Fonte
 
 A tipografia usa [`google_fonts`](https://pub.dev/packages/google_fonts)
